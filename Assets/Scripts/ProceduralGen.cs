@@ -23,21 +23,26 @@ public class ProceduralGen : MonoBehaviour
     public Material discovered;
     private List<int> visitedNodes = new List<int>();
     private Color customColor = new Color(0.4f, 0.9f, 0.7f, 1.0f);
-    private Vector3 size = new Vector3(5, 5, 5);
+    private Vector3 size = new Vector3(9, 9, 9);
 
     private int[,] mapGrid;
     // Start is called before the first frame update
-    public float generationSpeed = 0.02f;
+    
     private List<int>leafNodes = new List<int>();
 
-    public int xFartherstNode = 3;
-    public int AddEdges = 3;
 
     Dictionary<int, int> nodeToBranch = new Dictionary<int, int>();
     int currentBranchId = 0;
-
     
 
+    
+    [Header("Map Gen Options Selection")]
+    public int mapWidth = 300;
+    public int mapHeight = 300;
+    public int NumberOfRooms = 10;
+    public int AddEdges = 3;
+    public int xFartherstNode = 3;
+    public float generationSpeed = 0.02f;
     [Header("Object Prefab Selection")]
     public GameObject basicRoom; 
     public GameObject hallwayZ; 
@@ -59,7 +64,7 @@ public class ProceduralGen : MonoBehaviour
     {
         if (Input.GetKeyDown("space"))
         {
-            GenerateRooms();
+            GenerateNewRooms();
             
         }
 
@@ -162,6 +167,55 @@ public class ProceduralGen : MonoBehaviour
         }
         */
 
+
+    }
+
+    void GenerateNewRooms()
+    {
+
+        int count = 0;
+        while (count < NumberOfRooms)
+        {
+            // Generate random positions within the grid boundaries
+            
+            int xPos = xValues[Random.Range(0, mapWidth/10)];
+            int zPos = zValues[Random.Range(0, mapHeight/10)];
+
+            int randomX = xPos * 10;
+            int randomZ = zPos * 10;
+
+            Vector3 randomPosition = new Vector3(randomX, 0, randomZ);
+            
+            //xValues.Remove(xPos);
+            //zValues.Remove(zPos);
+            int roomWidth = Random.Range(1,5) * 10;
+            int roomHeight = Random.Range(1,5) * 10;
+            Vector3 roomSize = new Vector3(roomWidth, 5, roomHeight);
+            Collider[] col = Physics.OverlapBox(randomPosition, roomSize/2, Quaternion.identity);
+            if(col.Length == 0)
+            {
+                Debug.Log("no colliders");
+                GameObject room = Instantiate(basicRoom, randomPosition, Quaternion.identity);
+                room.transform.localScale = new Vector3(roomWidth,5,roomHeight);   
+                room.name = (count).ToString();
+                Rooms.Add(room);
+                count++;
+            }
+            
+        
+
+ /*
+        for(int i = 0; i < 30; i++)
+        {
+            for(int j = 0; j < 30; j++)
+            {
+                Debug.Log(string.Join(" .", mapGrid[i,j]));
+                
+            }
+            Debug.Log("\n");
+        }
+        */
+        }
 
     }
 
@@ -360,8 +414,8 @@ IEnumerator  DFSvisualized(int node, int prevRoomCode)
                     AdjMatrix[node, i] = 0;
                     AdjMatrix[i, node] = 0;
 
-                    StartCoroutine(pathfindHallwaysVisualized(node, i));
-                    yield return new WaitForSeconds(generationSpeed *3);
+                    yield return StartCoroutine(pathfindHallwaysVisualized(node, i));
+                    //yield return new WaitForSeconds(generationSpeed *3);
                     yield return StartCoroutine(DFSvisualized(i, prevRoomCode));
                 
                 }
